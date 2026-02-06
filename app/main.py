@@ -21,7 +21,9 @@ import asyncio
 import uuid
 import os
 
-API_BASE = "https://davisEmailconfigureApi.softsolanalytics.com/API/User"
+from app.streaming import router as streaming_router
+
+API_BASE= "https://davisEmailconfigureApi.softsolanalytics.com/API/User"
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -60,6 +62,8 @@ app = FastAPI(title="Focus Tracker API", version="2.0.0", lifespan=lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+app.include_router(streaming_router)
 
 # Disable CORS. Do not remove this for full-stack development.
 app.add_middleware(
@@ -167,6 +171,21 @@ async def student_page(request: Request):
 @app.get("/teacher", response_class=HTMLResponse)
 async def teacher_page(request: Request):
     return templates.TemplateResponse("teacher_analytics.html", {"request": request})
+
+
+@app.get("/stream/broadcast", response_class=HTMLResponse)
+async def teacher_stream_page(request: Request):
+    return templates.TemplateResponse("teacher_stream.html", {"request": request})
+
+
+@app.get("/stream/watch/{room_id}", response_class=HTMLResponse)
+async def student_stream_page(request: Request, room_id: str):
+    return templates.TemplateResponse("student_stream.html", {"request": request})
+
+
+@app.get("/stream/watch", response_class=HTMLResponse)
+async def student_stream_browse(request: Request):
+    return templates.TemplateResponse("student_stream.html", {"request": request})
 
 
 @app.post("/api/student/join")
